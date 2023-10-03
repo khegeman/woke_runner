@@ -14,6 +14,7 @@ from .runner import Flow, BoundFlow, get_methods_dict, run
 import random
 from inspect import signature
 from woke.testing.fuzzing import FuzzTest
+from .collector import JsonCollector
 
 
 def fuzz_generator(cls: type, flows: Iterable[Flow]):
@@ -26,7 +27,7 @@ def fuzz_generator(cls: type, flows: Iterable[Flow]):
         fp = {}
         for k, v in get_type_hints(flow_fn, include_extras=True).items():
             if k != "return":
-                #look for a callable method either global or on the FuzzTest instance
+                # look for a callable method either global or on the FuzzTest instance
                 method = getattr(type(cls), k, None)
                 if callable(method):
                     params_len = len(signature(method).parameters)
@@ -39,7 +40,7 @@ def fuzz_generator(cls: type, flows: Iterable[Flow]):
                             f"Method {k} has an unsupported number of parameters.  Must take either no parameters or 1 parameter that is self"
                         )
                 else:
-                    #default woke behavior
+                    # default woke behavior
                     fp[k] = generate(v)
 
         yield BoundFlow(name=flow.name, properties=flow.properties, params=fp)
@@ -75,11 +76,13 @@ def fuzz_test(
         run(test, bound_flows=fuzz_generator(test, flows=flows), properties=[])
 
 
-def stateful_test(test: FuzzTest, sequences_count: int, flow_count: int):
+def stateful_test(test: FuzzTest, sequences_count: int, flow_count: int, record=True):
+    collector = JsonCollector(test.__class__.__name__) if record else None
     for i in range(0, sequences_count):
         test._sequence_num = i
         run(
             test,
             bound_flows=stateful_generator(test, flow_count=flow_count),
             properties=[],
+            collector=collector,
         )

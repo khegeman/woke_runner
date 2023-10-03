@@ -38,10 +38,12 @@ def get_methods(test: fuzzing.FuzzTest, attr: str) -> List[Callable]:
                 ret.append(m)
     return ret
 
+
 from typing import TypeVar, NewType, List
 
-T = TypeVar('T', bound='FuzzTest')
-PropertyTest = NewType('PropertyTest', Callable[[T], bool])
+T = TypeVar("T", bound="FuzzTest")
+PropertyTest = NewType("PropertyTest", Callable[[T], bool])
+
 
 @dataclass
 class Flow:
@@ -57,8 +59,10 @@ class Flow:
         A list of property tests, each intended to validate a specific property
         or invariant associated with the flow.
     """
+
     name: str
     properties: List[PropertyTest]
+
 
 @dataclass
 class BoundFlow(Flow):
@@ -71,15 +75,19 @@ class BoundFlow(Flow):
         A dictionary of parameter names to their bound values which will be
         passed to the method when called.
     """
+
     params: Dict
 
-from typing import Iterable
+
+from typing import Iterable, Union
+from .collector import JsonCollector
 
 
 def run(
     test: fuzzing.FuzzTest,
     bound_flows: Iterable[BoundFlow],
     properties: List[PropertyTest] = [],
+    collector: Union[JsonCollector, None] = None,
 ):
 
     """
@@ -133,6 +141,10 @@ def run(
 
         test._flow_num = j
         test.pre_flow(flow)
+
+        if collector is not None:
+            collector.collect(test, flow, **fp)
+
         flow(test, **fp)
         flows_counter[flow] += 1
         test.post_flow(flow)

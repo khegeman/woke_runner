@@ -15,13 +15,14 @@ def check_balance(bt: BankTest, amount: int):
 
     return f
 
+
 @default_chain.connect()
 def test_deposit():
     bt = BankTest()
     unit_test(
         bt,
         flow_name="deposit",
-        params={"bank_input": BankInput(user=Account(user_addr), amount=2)}
+        params={"bank_input": BankInput(user=Account(user_addr), amount=2)},
     )
 
 
