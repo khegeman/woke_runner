@@ -10,13 +10,13 @@ alias r := replay
 default: default_impl
 
 fuzz:
-    woke --debug fuzz -s 4f2a521550c29390 --passive -n 1 tests/test_method2.py
+    woke --debug fuzz -s 4f2a521550c29390 --passive -n 1 tests/test_fuzz.py
 
 unit:
     WOKE_UNIT=1 woke --debug test  tests/test_unit.py
 
 replay:
-    WOKE_REPLAY=1 woke --debug fuzz -s 4f2a521550c29390 --passive -n 1 tests/test_method2.py
+    WOKE_REPLAY=1 woke --debug fuzz -s 4f2a521550c29390 --passive -n 1 tests/test_replay.py
 
 forge flow_name:
     WOKE_FUZZ={{flow_name}} woke --debug fuzz -s 4f2a521550c29390 --passive -n 1 tests/test_method2.py

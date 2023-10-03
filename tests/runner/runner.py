@@ -8,17 +8,18 @@ This runner extends functionality beyond fuzz testing.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Callable, DefaultDict, List, Optional, Type,Dict,get_type_hints
+from typing import Callable, DefaultDict, List, Optional, Type, Dict, get_type_hints
 
-from typing_extensions import get_type_hints,get_args, get_origin
-from dataclasses import fields,dataclass
+from typing_extensions import get_type_hints, get_args, get_origin
+from dataclasses import fields, dataclass
 
 from woke.testing.core import get_connected_chains
 from woke.testing import fuzzing
 
 import copy
 
-def get_methods_dict(test : fuzzing.FuzzTest, attr: str) -> Dict[Callable]:
+
+def get_methods_dict(test: fuzzing.FuzzTest, attr: str) -> Dict[Callable]:
     ret = {}
     for x in dir(test):
         if hasattr(test.__class__, x):
@@ -27,7 +28,8 @@ def get_methods_dict(test : fuzzing.FuzzTest, attr: str) -> Dict[Callable]:
                 ret[x] = m
     return ret
 
-def get_methods(test : fuzzing.FuzzTest, attr: str) -> List[Callable]:
+
+def get_methods(test: fuzzing.FuzzTest, attr: str) -> List[Callable]:
     ret = []
     for x in dir(test):
         if hasattr(test.__class__, x):
@@ -37,12 +39,13 @@ def get_methods(test : fuzzing.FuzzTest, attr: str) -> List[Callable]:
     return ret
 
 
-@dataclass 
+@dataclass
 class Flow:
-    name : str 
-    properties : List[Callable]
+    name: str
+    properties: List[Callable]
 
-@dataclass 
+
+@dataclass
 class BoundFlow:
     """
     Represents data required to call a Python method with bound parameters.
@@ -56,21 +59,23 @@ class BoundFlow:
         A list of callables, each intended to validate a specific property or invariant of the method's results.
 
     params : Dict
-        A dictionary of parameter names to their bound values which will be 
+        A dictionary of parameter names to their bound values which will be
         passed to the method when called.
-    """    
-    name : str 
-    properties : List[Callable]
-    params : Dict
+    """
+
+    name: str
+    properties: List[Callable]
+    params: Dict
 
 
 from typing import Iterable
 
 
 def run(
-    test : fuzzing.FuzzTest,
+    test: fuzzing.FuzzTest,
     bound_flows: Iterable[BoundFlow],
-    properties : List[Callable]=[]):
+    properties: List[Callable] = [],
+):
 
     """
     Execute the test flows with bound parameters and validate using property tests.
@@ -81,25 +86,25 @@ def run(
     property tests provided in the `properties` parameter are run after all
     flows are executed. Invariants are also checked at defined periods.
 
-    This is a replacement for the run method on the woke class FuzzTest. 
+    This is a replacement for the run method on the woke class FuzzTest.
 
     Parameters:
     -----------
     test : fuzzing.FuzzTest
         The fuzz test instance on which flows and invariants are to be executed.
-    
+
     bound_flows : Iterable[BoundFlow]
-        An iterable of flows with their bound parameters. Each flow will be executed 
+        An iterable of flows with their bound parameters. Each flow will be executed
         and then its associated property tests will be run.
-    
+
     properties : List[Callable], optional
         A list of global property tests that are executed after all flows are run.
-        These are used to validate global properties or invariants that are not 
+        These are used to validate global properties or invariants that are not
         specific to any individual flow.
 
     Notes:
     ------
-    The method maintains counters for flows and invariants to keep track of 
+    The method maintains counters for flows and invariants to keep track of
     their execution frequencies. It also handles the pre and post sequence, flow,
     and invariant logic by invoking the respective methods on the `test` instance.
     """
@@ -108,30 +113,26 @@ def run(
     flows: Dict[Callable] = get_methods_dict(test, "flow")
     invariants: List[Callable] = get_methods(test, "invariant")
 
-
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
-    invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
-        int
-    )
+    invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
 
     snapshots = [chain.snapshot() for chain in chains]
     test._flow_num = 0
     test.pre_sequence()
-    
-    for j,uflow in enumerate(bound_flows):
+
+    for j, uflow in enumerate(bound_flows):
         flow_name = uflow.name
         flow = flows.get(flow_name)
-        
+
         fp = uflow.params
-                        
+
         test._flow_num = j
         test.pre_flow(flow)
         flow(test, **fp)
         flows_counter[flow] += 1
         test.post_flow(flow)
         for p in uflow.properties:
-            p(test)            
-
+            p(test)
 
         test.pre_invariants()
         for inv in invariants:
