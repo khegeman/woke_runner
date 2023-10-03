@@ -9,4 +9,4 @@ def test_fuzz():
 
     bt = BankTest()
 
-    stateful_test(bt, sequence_count=10, flow_count=5)
+    stateful_test(bt, sequences_count=10, flow_count=5)

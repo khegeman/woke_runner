@@ -38,35 +38,40 @@ def get_methods(test: fuzzing.FuzzTest, attr: str) -> List[Callable]:
                 ret.append(m)
     return ret
 
+from typing import TypeVar, NewType, List
+
+T = TypeVar('T', bound='FuzzTest')
+PropertyTest = NewType('PropertyTest', Callable[[T], bool])
 
 @dataclass
 class Flow:
-    name: str
-    properties: List[Callable]
-
-
-@dataclass
-class BoundFlow:
     """
-    Represents data required to call a Python method with bound parameters.
+    Represents a flow with its name and associated property tests.
 
     Attributes:
     -----------
     name : str
-        The name or identifier of the bound method.
+        The name or identifier of the flow.
 
-    properties : List[Callable]
-        A list of callables, each intended to validate a specific property or invariant of the method's results.
+    properties : List[PropertyTest]
+        A list of property tests, each intended to validate a specific property
+        or invariant associated with the flow.
+    """
+    name: str
+    properties: List[PropertyTest]
 
+@dataclass
+class BoundFlow(Flow):
+    """
+    A specialized flow that binds specific parameters values to a method.
+
+    Attributes:
+    -----------
     params : Dict
         A dictionary of parameter names to their bound values which will be
         passed to the method when called.
     """
-
-    name: str
-    properties: List[Callable]
     params: Dict
-
 
 from typing import Iterable
 
@@ -74,7 +79,7 @@ from typing import Iterable
 def run(
     test: fuzzing.FuzzTest,
     bound_flows: Iterable[BoundFlow],
-    properties: List[Callable] = [],
+    properties: List[PropertyTest] = [],
 ):
 
     """

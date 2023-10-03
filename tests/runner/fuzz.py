@@ -23,11 +23,10 @@ def fuzz_generator(cls: type, flows: Iterable[Flow]):
 
     for flow in flows:
         flow_fn = all_flows.get(flow.name)
-        print(flow)
         fp = {}
         for k, v in get_type_hints(flow_fn, include_extras=True).items():
             if k != "return":
-                print("method", k)
+                #look for a callable method either global or on the FuzzTest instance
                 method = getattr(type(cls), k, None)
                 if callable(method):
                     params_len = len(signature(method).parameters)
@@ -40,6 +39,7 @@ def fuzz_generator(cls: type, flows: Iterable[Flow]):
                             f"Method {k} has an unsupported number of parameters.  Must take either no parameters or 1 parameter that is self"
                         )
                 else:
+                    #default woke behavior
                     fp[k] = generate(v)
 
         yield BoundFlow(name=flow.name, properties=flow.properties, params=fp)

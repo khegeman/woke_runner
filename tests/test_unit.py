@@ -11,19 +11,17 @@ from .runner import run, BoundFlow, unit_test
 def check_balance(bt: BankTest, amount: int):
     def f(bt: BankTest):
         print(default_chain.accounts[1])
-        assert bt.bank.accounts(get_address(user_addr)) == amount
+        assert bt._bank.accounts(get_address(user_addr)) == amount
 
     return f
-
 
 @default_chain.connect()
 def test_deposit():
     bt = BankTest()
     unit_test(
         bt,
-        name="deposit",
-        params={"random_input": BankInput(user=Account(user_addr), amount=2)},
-        properties=[check_balance(bt, 2)],
+        flow_name="deposit",
+        params={"bank_input": BankInput(user=Account(user_addr), amount=2)}
     )
 
 
@@ -34,12 +32,12 @@ def test_withdraw():
     flows = [
         BoundFlow(
             name="deposit",
-            params={"random_input": BankInput(user=Account(user_addr), amount=2)},
+            params={"bank_input": BankInput(user=Account(user_addr), amount=2)},
             properties=[check_balance(bt, 2)],
         ),
         BoundFlow(
             name="withdraw",
-            params={"random_input": BankInput(user=Account(user_addr), amount=2)},
+            params={"bank_input": BankInput(user=Account(user_addr), amount=2)},
             properties=[check_balance(bt, 0)],
         ),
     ]
@@ -54,12 +52,12 @@ def test_withdraw_fail():
     flows = [
         BoundFlow(
             name="deposit",
-            params={"random_input": BankInput(user=Account(user_addr), amount=2)},
+            params={"bank_input": BankInput(user=Account(user_addr), amount=2)},
             properties=[check_balance(bt, 2)],
         ),
         BoundFlow(
             name="withdraw",
-            params={"random_input": BankInput(user=Account(user_addr), amount=4)},
+            params={"bank_input": BankInput(user=Account(user_addr), amount=4)},
             properties=[check_balance(bt, 2)],
         ),
     ]
