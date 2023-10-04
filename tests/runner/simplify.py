@@ -75,11 +75,13 @@ def simplify_test(
         baseline = e
 
     if baseline is not None:
-        removed = []
+        removed_flows = []
         for r in range(flows_count - 1, -1, -1):
 
             flow_numbers = [
-                j for j in range(0, flows_count) if (j != r) and (j not in removed)
+                j
+                for j in range(0, flows_count)
+                if (j != r) and (j not in removed_flows)
             ]
 
             try:
@@ -91,15 +93,16 @@ def simplify_test(
                     properties=[],
                 )
             except Exception as e:
-                print("exception ", e, test._flow_num, " r ", r)
+                # did the final flow revert with the same error as the original test case
                 if test._flow_num == len(flow_numbers) - 1:
+                    # if we have the same exception, then we can remove the flow from the sequence
                     if type(e) is type(baseline) and e.args == baseline.args:
-                        removed.append(r)
+                        removed_flows.append(r)
 
         next = 0
         with open(output_filename, "w") as fp:
             for r in range(flows_count):
-                if r not in removed:
+                if r not in removed_flows:
                     save_row = {0: {next: sequences[str(sequence_number)][str(r)]}}
                     jr = jsons.dumps(save_row, strip_privates=True, strip_nulls=True)
                     print(jr, file=fp)
