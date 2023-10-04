@@ -38,7 +38,7 @@ def get_param(sequences: Dict, param: str, sequence_num: int, flow_num: int, t: 
 
 
 def replay_generator(cls: type, filename: str, sequence_number: int):
-    """generate a sequence of flows with parameters bound with randomized values - in a given order"""
+
     sequence = str(sequence_number)
     sequences = {}
     # load json lines recorded file to a dict for now
